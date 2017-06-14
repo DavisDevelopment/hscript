@@ -30,13 +30,8 @@ import hscript.Expr;
 class Interp {
     /* Constructor Function */
     public function new():Void {
-		#if haxe3
-		variables = new Map<String,Dynamic>();
+		variables = new Scope();
 		locals = new Map();
-		#else
-		variables = new Hash();
-		locals = new Hash();
-		#end
 
 		declared = new Array();
 		variables.set("null",null);
@@ -322,12 +317,12 @@ class Interp {
     /**
       * resolve the value of a variable by name
       */
-	private function resolve(id : String):Dynamic {
+	public function resolve(id:String, safe:Bool=true):Dynamic {
 		var l = locals.get(id);
 		if( l != null )
 			return l.r;
 		var v = variables.get(id);
-		if( v == null && !variables.exists(id) )
+		if(v == null && !variables.exists(id) && safe)
 			error(EUnknownVariable(id));
 		return v;
 	}
@@ -404,7 +399,7 @@ class Interp {
                     case "--":
                         return increment(e,prefix,-1);
                     case "~":
-                        if (neko && !haxe3)
+                        #if(neko && !haxe3)
                         return haxe.Int32.complement(expr(e));
                         #else
                         return ~expr(e);
@@ -806,15 +801,10 @@ class Interp {
 
 /* === Instance Fields === */
 
-#if haxe3
-	public var variables : Map<String,Dynamic>;
-	var locals : Map<String,{ r : Dynamic }>;
+	//public var variables : Map<String,Dynamic>;
+	public var variables : Scope;
+	private var locals : Map<String,{ r : Dynamic }>;
 	var binops : Map<String, Expr -> Expr -> Dynamic >;
-	#else
-	public var variables : Hash<Dynamic>;
-	var locals : Hash<{ r : Dynamic }>;
-	var binops : Hash< Expr -> Expr -> Dynamic >;
-	#end
 
 	var depth : Int;
 	var inTry : Bool;
