@@ -688,11 +688,8 @@ class Interp {
 		restore(old);
 	}
 
-    /**
-      * attempt to get an iterator from [v]
-      */
-	private function makeIterator(v : Dynamic):Iterator<Dynamic> {
-		#if ((flash && !flash9) || php)
+	function makeIterator( v : Dynamic ) : Iterator<Dynamic> {
+		#if ((flash && !flash9) || (php && !php7 && haxe_ver < '4.0.0'))
 		if ( v.iterator != null ) v = v.iterator();
 		#else
 		try v = v.iterator() catch( e : Dynamic ) {};
