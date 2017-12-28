@@ -31,10 +31,26 @@ class Interp {
 		locals = new Map();
 
 		declared = new Array();
-		variables.set("null",null);
-		variables.set("true",true);
-		variables.set("false",false);
-		variables.set("trace",function(e) haxe.Log.trace(Std.string(e), posInfos()));
+		variables.set("null", null);
+		variables.set("true", true);
+		variables.set("false", false);
+		variables.set("trace", Reflect.makeVarArgs(function(args: Array<Dynamic>) {
+		    //haxe.Log.trace(Std.string(e), posInfos()));
+		    if (args.length == 0) {
+		        return ;
+            }
+            else if (args.length == 1) {
+                trace(args[0]);
+            }
+            else {
+                var inf = posInfos();
+                var v = args.shift();
+                if (args.length > 0) {
+                    inf.customParams = args;
+                }
+                haxe.Log.trace(v, inf);
+            }
+        }));
 		initOps();
 	}
 
