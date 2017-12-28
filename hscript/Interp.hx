@@ -24,6 +24,12 @@ package hscript;
 import haxe.PosInfos;
 import hscript.Expr;
 
+private enum Stop {
+	SBreak;
+	SContinue;
+	SReturn;
+}
+
 class Interp {
     /* Constructor Function */
     public function new():Void {
@@ -269,12 +275,12 @@ class Interp {
 		} 
 		catch( e : Stop ) {
 			switch( e ) {
-                case SBreak:
-                    throw "Invalid break";
-                case SContinue:
-                    throw "Invalid continue";
-                case SReturn(v):
-                    return v;
+			case SBreak: throw "Invalid break";
+			case SContinue: throw "Invalid continue";
+			case SReturn:
+				var v = returnValue;
+				returnValue = null;
+				return v;
 			}
 		}
 		return null;
@@ -699,9 +705,9 @@ class Interp {
 			} 
 			catch (err : Stop) {
 				switch(err) {
-				 case SContinue:
-				 case SBreak: break;
-				 case SReturn(_): throw err;
+				case SContinue:
+				case SBreak: break;
+				case SReturn: throw err;
 				}
 			}
 		}
@@ -721,7 +727,7 @@ class Interp {
 				switch(err) {
 				case SContinue:
 				case SBreak: break;
-				case SReturn(_): throw err;
+				case SReturn: throw err;
 				}
 			}
 		}
@@ -759,7 +765,7 @@ class Interp {
 				switch( err ) {
 				case SContinue:
 				case SBreak: break;
-				case SReturn(_): throw err;
+				case SReturn: throw err;
 				}
 			}
 		}
