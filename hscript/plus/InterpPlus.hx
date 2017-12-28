@@ -4,18 +4,19 @@ import hscript.Expr;
 import hscript.plus.core.*;
 
 class InterpPlus extends Interp {
-	public var globals(default, null):Map<String, Dynamic>;
+	//public var globals(default, null):Map<String, Dynamic>;
+    public var globals(default, null): Scope;
 
-	var classImporter:ClassImporter;
-	var eclassInterp:InterpEClass;
+	private var classImporter:ClassImporter;
+	private var eclassInterp:InterpEClass;
 
-	var exprSteps:Array<Expr->Dynamic> = [];
+	private var exprSteps:Array<Expr->Dynamic> = [];
 
 	override function assign(e1:Expr, e2:Expr):Dynamic {
-		var assignedValue = expr(e2);
-		switch (edef(e1)) {
-			case EIdent(id):
-				var object = globals.get("this");
+		var assignedValue = expr( e2 );
+		switch (edef( e1 )) {
+			case EIdent( id ):
+				var object = globals.get( "this" );
 				if (object != null)
 					Reflect.setField(object, id, assignedValue);
 			default:
@@ -27,45 +28,46 @@ class InterpPlus extends Interp {
 
 	public function new() {
 		super();
+
 		globals = variables;
 
-		classImporter = new ClassImporter(this);
+		classImporter = new ClassImporter( this );
 
 		setupExprSteps();
 	}
 
-	public function setResolveImportFunction(func:String->Dynamic) {
+	public function setResolveImportFunction(func: String->Dynamic) {
 		classImporter.setResolveImportFunction(func);
 	}
 
-	function setupExprSteps() {
+	private function setupExprSteps() {
 		pushExprStep(InterpECall.expr.bind(this));
 		pushExprStep(superExpr);
 		pushExprStepVoid(classImporter.importFromExpr);
 		pushExprStep(InterpEClass.expr.bind(this));
 	}
 
-	function pushExprStepVoid(stepVoid:Expr->Void) {
+	private function pushExprStepVoid(stepVoid:Expr->Void) {
 		var  step = e -> { stepVoid(e); return null; };
 		pushExprStep(step);
 	}
 
-	function pushExprStep(step:Expr->Dynamic) {
-		exprSteps.push(step);
+	private function pushExprStep(step: Expr->Dynamic) {
+		exprSteps.push( step );
 	}
 
 	public function superExpr(e:Expr):Dynamic {
 		return super.expr(e);
 	}
 
-	override public function expr(e:Expr):Dynamic {
-		return startExprSteps(e);
+	override public function expr(e: Expr):Dynamic {
+		return startExprSteps( e );
 	}
 
-	function startExprSteps(e:Expr):Dynamic {
+	private function startExprSteps(e: Expr):Dynamic {
 		var ret:Dynamic = null;
 		for (step in exprSteps) {
-			ret = step(e);
+			ret = step( e );
 			if (ret != null)
 				break;
 		}
@@ -76,7 +78,7 @@ class InterpPlus extends Interp {
 		return InterpGet.get(this, o, f);
 	}
 
-	override function resolve(id:String):Dynamic {
+	override function resolve(id:String, safe:Bool=true):Dynamic {
 		return InterpResolve.resolve(this, id);
 	}
 

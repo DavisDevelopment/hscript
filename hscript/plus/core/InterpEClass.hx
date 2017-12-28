@@ -3,26 +3,27 @@ package hscript.plus.core;
 import hscript.Expr;
 
 class InterpEClass {
-	static var interp:InterpPlus;
-	static var globals:Map<String, Dynamic>;
+	static var interp: InterpPlus;
+	static var globals: Scope;
 
-	static var name:String;
-	static var eclass:Expr;
-	static var superClassName:String;
-	static var classObject:Dynamic;
+	static var name: String;
+	static var eclass: Expr;
+	static var superClassName: String;
+	static var classObject: Dynamic;
 
     public static function expr(interp:InterpPlus, expr:Expr):Dynamic {
 		InterpEClass.interp = interp;
 		globals = interp.variables;
 
-        return createClassIfIsEClass(expr);
+        return createClassIfIsEClass( expr );
     }
 
-	static function createClassIfIsEClass(expr:Expr) {
-		switch (ExprHelper.getExprDef(expr)) {
+	static function createClassIfIsEClass(expr: Expr) {
+		switch (ExprHelper.getExprDef( expr )) {
 			case EClass(name, e, superClassName):
 				referenceProperties(name, e, superClassName);
 				return createClass();
+
 			default:
 				return null;
 		}
