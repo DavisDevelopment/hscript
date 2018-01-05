@@ -24,11 +24,7 @@ package hscript;
 import haxe.PosInfos;
 import hscript.Expr;
 
-private enum Stop {
-	SBreak;
-	SContinue;
-	SReturn;
-}
+
 
 class Interp {
     /* Constructor Function */
@@ -269,18 +265,22 @@ class Interp {
     /**
       * evaluate [e] for its return value
       */
-	function exprReturn(e : Expr):Dynamic {
+	private function exprReturn(e : Expr):Dynamic {
 		try {
-			return expr(e);
+			return expr( e );
 		} 
-		catch( e : Stop ) {
-			switch( e ) {
-			case SBreak: throw "Invalid break";
-			case SContinue: throw "Invalid continue";
-			case SReturn:
-				var v = returnValue;
-				returnValue = null;
-				return v;
+		catch(e : Stop) {
+			switch ( e ) {
+			    case SBreak: 
+			        throw "Invalid break";
+
+			    case SContinue: 
+			        throw "Invalid continue";
+
+			    case SReturn:
+                    var v = returnValue;
+                    returnValue = null;
+                    return v;
 			}
 		}
 		return null;
@@ -472,8 +472,9 @@ class Interp {
                 throw SContinue;
 
                 // return statement
-            case EReturn(e):
-                throw SReturn((e == null)?null:expr(e));
+            case EReturn( e ):
+                returnValue = ((e == null) ? null : expr( e ));
+                throw SReturn;
 
                 // function definition
             case EFunction(params, fexpr, name, _):
@@ -849,12 +850,13 @@ class Interp {
 
 	//public var variables : Map<String,Dynamic>;
 	public var variables : Scope;
-	private var locals : Map<String,{ r : Dynamic }>;
-	var binops : Map<String, Expr -> Expr -> Dynamic >;
+	private var locals : Map<String, {r: Dynamic}>;
+	private var binops : Map<String, Expr -> Expr -> Dynamic >;
 
-	var depth : Int;
-	var inTry : Bool;
-	var declared : Array<{ n : String, old : { r : Dynamic } }>;
+	private var depth: Int;
+	private var inTry: Bool;
+	private var returnValue:Null<Dynamic> = null;
+	private var declared: Array<{n: String, old: {r: Dynamic}}>;
 
 	#if hscriptPos
 	var curExpr : Expr;
@@ -864,5 +866,13 @@ class Interp {
 private enum Stop {
 	SBreak;
 	SContinue;
+	SReturn;
+}
+
+/*
+private enum Stop {
+	SBreak;
+	SContinue;
 	SReturn( v : Dynamic );
 }
+*/
