@@ -44,7 +44,7 @@ enum Expr {
 #end
 	EConst( c : Const );
 	EIdent( v : String );
-	EVar( n : String, ?t : CType, ?e : Expr, ?access:Array<Access> );
+	EVar( n : String, ?t : CType, ?e : Expr, ?access:Array<FieldAccess> );
 	EParent( e : Expr );
 	EBlock( e : Array<Expr> );
 	EField( e : Expr, f : String );
@@ -56,7 +56,7 @@ enum Expr {
 	EFor( v : String, it : Expr, e : Expr );
 	EBreak;
 	EContinue;
-	EFunction( args : Array<Argument>, e : Expr, ?name : String, ?ret : CType, ?access:Array<Access> );
+	EFunction( args : Array<Argument>, e : Expr, ?name : String, ?ret : CType, ?access:Array<FieldAccess> );
 	EReturn( ?e : Expr );
 	EArray( e : Expr, index : Expr );
 	EArrayDecl( e : Array<Expr> );
@@ -70,13 +70,18 @@ enum Expr {
 	EMeta( name : String, args : Array<Expr>, e : Expr );
 
 	EClass(name:String, e:Expr, ?baseClass:String);
-	EPackage(path:String);
-	EImport(path:String);
+	EPackage(path: String);
+	EImport(path: String);
 }
 
-typedef Argument = { name : String, ?t : CType, ?opt : Bool, ?value : Expr };
+typedef Argument = { 
+    name: String,
+    ?t: CType,
+    ?opt: Bool,
+    ?value: Expr
+};
 
-typedef Metadata = Array<{ name : String, params : Array<Expr> }>;
+typedef Metadata = Array<{name: String, params: Array<Expr>}>;
 
 enum CType {
 	CTPath( path : Array<String>, ?params : Array<CType> );
@@ -85,6 +90,7 @@ enum CType {
 	CTParent( t : CType );
 }
 
+/*
 enum Access {
 	APublic;
 	APrivate;
@@ -93,6 +99,7 @@ enum Access {
 	ADynamic;
 	AInline;
 }
+*/
 
 #if hscriptPos
 class Error {
@@ -127,7 +134,6 @@ enum Error {
 	EInvalidAccess( f : String );
 }
 
-
 enum ModuleDecl {
 	DPackage( path : Array<String> );
 	DImport( path : Array<String>, ?everything : Bool );
@@ -154,6 +160,7 @@ enum FieldAccess {
 	APublic;
 	APrivate;
 	AInline;
+	ADynamic;
 	AOverride;
 	AStatic;
 	AMacro;
