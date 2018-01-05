@@ -75,7 +75,15 @@ class InterpPlus extends Interp {
 	}
 
 	override function get(o:Dynamic, f:String):Dynamic {
+		//this.classImporter
 		return InterpGet.get(this, o, f);
+	}
+
+	override function call(o:Dynamic, f:Dynamic, args:Array<Dynamic>):Dynamic {
+	    if (Reflect.hasField(o, 'super') && f == o.super) {
+	        return super.call(o, Reflect.getProperty(f, 'new'), args);
+	    }
+        else return super.call(o, f, args);
 	}
 
 	override function resolve(id:String, safe:Bool=true):Dynamic {
