@@ -4,7 +4,7 @@ import hscript.Expr;
 import hscript.Parser;
 
 class ParserPlus extends Parser {
-    var access:Array<Access> = [];
+    var access:Array<FieldAccess> = [];
 
     /* Constructor Function */
     public function new() {
@@ -56,12 +56,12 @@ class ParserPlus extends Parser {
         return (switch( id ) {
             // package declaration
             case "package":
-                var path = parsePath();
+                var path = parseStringPath();
                 mk(EPackage( path ));
 
                 // import directive
             case "import":
-                var path = parsePath();
+                var path = parseStringPath();
                 mk(EImport( path ));
 
                 // class definitions
@@ -105,15 +105,22 @@ class ParserPlus extends Parser {
             case "override": pushAndParseNext(AOverride);
             case "dynamic": pushAndParseNext(ADynamic);
             case "inline": pushAndParseNext(AInline);
+            case "macro": pushAndParseNext(AMacro);
 
             default: null;
         });
     }
 
+    private function parseStringPath():String {
+        var pp = parsePath();
+        return pp.join( '.' );
+    }
+
     /**
      *  @return "something.like.this"
      */
-    function parsePath():String {
+    override function parsePath():Array<String> {
+        return super.parsePath();
         var tk = token();
         switch (tk) {
             case TId(id):
@@ -131,17 +138,17 @@ class ParserPlus extends Parser {
                             unexpected(tk);
                     }
                 }
-                return path;
+                return [path];
             case TSemicolon:
                 push(tk);
-                return "";
+                return [""];
             default:
                 unexpected(tk);
-                return "";
+                return [""];
         }
     }
 
-    function pushAndParseNext(a:Access) {
+    function pushAndParseNext(a:FieldAccess) {
         access.push(a);
         var tk = token();
         return switch (tk) {
