@@ -1,0 +1,8 @@
+# This is used solely to enable code completion from the Haxe language server in VSCode
+# since setting in test/build.hxml doesn't work for some reasons
+
+-main TestMain
+-lib munit
+-cp test/src
+
+-neko test.n

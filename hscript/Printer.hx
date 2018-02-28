@@ -37,6 +37,13 @@ class Printer {
 		return buf.toString();
 	}
 
+	public function typeToString( t : CType ) {
+		buf = new StringBuf();
+		tabs = "";
+		type(t);
+		return buf.toString();
+	}
+
 	inline function add<T>(s:T) buf.add(s);
 
 	function type( t : CType ) {
@@ -80,7 +87,7 @@ class Printer {
 
 	function addType( t : CType ) {
 		if( t != null ) {
-			add(" : ");
+			add(":");
 			type(t);
 		}
 	}
@@ -119,8 +126,8 @@ class Printer {
 					expr(e);
 					add(";\n");
 				}
-				tabs = tabs.substr(1);
 				add("}");
+				tabs = tabs.substr(1);
 			}
 		case EField(e, f):
 			expr(e);
@@ -245,7 +252,7 @@ class Printer {
 				add("{\n");
 				for( f in fl ) {
 					add(tabs);
-					add(f.name+" : ");
+					add(f.name+":");
 					expr(f.e);
 					add(",\n");
 				}
@@ -293,6 +300,20 @@ class Printer {
 			}
 			add(" ");
 			expr(e);
+
+		case EPackage(path):
+			add("package $path;");
+		case EImport(path):
+			add("import $path;");
+		case EClass(name, e, baseClass):
+			add('class $name');
+			if (baseClass != null)
+				add(' extends $baseClass');
+			add(' {\n');
+			tabs += "\t";
+			expr(e);
+			tabs = tabs.substr(1);
+			add("}");
 		}
 	}
 
@@ -306,6 +327,7 @@ class Printer {
 			case EUnexpected(s): "Unexpected token: \""+s+"\"";
 			case EUnterminatedString: "Unterminated string";
 			case EUnterminatedComment: "Unterminated comment";
+			case EInvalidPreprocessor(str): "Invalid preprocessor (" + str + ")";
 			case EUnknownVariable(v): "Unknown variable: "+v;
 			case EInvalidIterator(v): "Invalid iterator: "+v;
 			case EInvalidOp(op): "Invalid operator: "+op;

@@ -1,0 +1,96 @@
+{
+    "version": "0.1.0",
+    "command": "haxelib",
+    "options": {
+        "cwd": "${workspaceRoot}/test"
+    },
+    "tasks": [
+        {
+            "taskName": "Test All Targets",
+            "args": ["run", "munit", "test", "-coverage"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Neko",
+            "args": ["run", "munit", "test", "-coverage", "-neko"],
+            "isBuildCommand": true,
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Javascript",
+            "args": ["run", "munit", "test", "-coverage", "-js"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Flash",
+            "args": ["run", "munit", "test", "-coverage", "-as3"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test C++",
+            "args": ["run", "munit", "test", "-coverage", "-cpp"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+
+        {
+            "taskName": "Test All Targets Debug Mode",
+            "args": ["run", "munit", "test", "-coverage", "-debug"],
+            "isBuildCommand": true,
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Neko Debug Mode",
+            "args": ["run", "munit", "test", "-coverage", "-neko", "-debug"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Javascript Debug Mode",
+            "args": ["run", "munit", "test", "-coverage", "-js", "-debug"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Flash Debug Mode",
+            "args": ["run", "munit", "test", "-coverage", "-as3", "-debug"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test C++ Debug Mode",
+            "args": ["run", "munit", "test", "-coverage", "-cpp", "-debug"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Web",
+            "args": ["run", "munit", "test", "-coverage", "-as3", "-js"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Web Debug Mode",
+            "args": ["run", "munit", "test", "-coverage", "-as3", "-js", "-debug"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Neko & C++",
+            "args": ["run", "munit", "test", "-coverage", "-cpp", "-neko"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        },
+        {
+            "taskName": "Test Neko & C++ Debug Mode",
+            "args": ["run", "munit", "test", "-coverage", "-cpp", "-neko", "-debug"],
+            "suppressTaskName": true,
+            "problemMatcher": "$haxe"
+        }
+    ]
+}

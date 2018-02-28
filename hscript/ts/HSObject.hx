@@ -1,3 +1,4 @@
+
 package hscript.ts;
 
 class HSObject {
@@ -94,6 +95,7 @@ class HSObjectProperty {
     public inline function get():Dynamic {
         return (getter!=null?getter():value);
     }
+
     public inline function set(v : Dynamic):Dynamic {
         return ((setter != null) ? setter( v ) : value = v);
     }

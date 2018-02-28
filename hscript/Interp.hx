@@ -24,6 +24,8 @@ package hscript;
 import haxe.PosInfos;
 import hscript.Expr;
 
+
+
 class Interp {
     /* Constructor Function */
     public function new():Void {
@@ -31,10 +33,26 @@ class Interp {
 		locals = new Map();
 
 		declared = new Array();
-		variables.set("null",null);
-		variables.set("true",true);
-		variables.set("false",false);
-		variables.set("trace",function(e) haxe.Log.trace(Std.string(e), posInfos()));
+		variables.set("null", null);
+		variables.set("true", true);
+		variables.set("false", false);
+		variables.set("trace", Reflect.makeVarArgs(function(args: Array<Dynamic>) {
+		    //haxe.Log.trace(Std.string(e), posInfos()));
+		    if (args.length == 0) {
+		        return ;
+            }
+            else if (args.length == 1) {
+                trace(args[0]);
+            }
+            else {
+                var inf = posInfos();
+                var v = args.shift();
+                if (args.length > 0) {
+                    inf.customParams = args;
+                }
+                haxe.Log.trace(v, inf);
+            }
+        }));
 		initOps();
 	}
 
@@ -247,17 +265,21 @@ class Interp {
     /**
       * evaluate [e] for its return value
       */
-	function exprReturn(e : Expr):Dynamic {
+	private function exprReturn(e : Expr):Dynamic {
 		try {
-			return expr(e);
+			return expr( e );
 		} 
-		catch( e : Stop ) {
-			switch( e ) {
-                case SBreak:
-                    throw "Invalid break";
-                case SContinue:
-                    throw "Invalid continue";
-                case SReturn(v):
+		catch(e : Stop) {
+			switch ( e ) {
+			    case SBreak: 
+			        throw "Invalid break";
+
+			    case SContinue: 
+			        throw "Invalid continue";
+
+			    case SReturn:
+                    var v = returnValue;
+                    returnValue = null;
                     return v;
 			}
 		}
@@ -325,16 +347,16 @@ class Interp {
 	}
 
     /**
-      * interpret the expression [e] and return its return-value
-      */
-	public function expr( e : Expr ) : Dynamic {
-		#if hscriptPos
-		curExpr = e;
-		var e = e.e;
-		#end
+     * interpret the expression [e] and return its return-value
+     */
+    public function expr( e : Expr ) : Dynamic {
+        #if hscriptPos
+        curExpr = e;
+        var e = e.e;
+        #end
 
-		switch( e ) {
-		    // constants
+        switch( e ) {
+            // constants
             case EConst(c):
                 switch( c ) {
                     case CInt(v): return v;
@@ -345,12 +367,12 @@ class Interp {
                     #end
                 }
 
-            // identifiers
-            case EIdent(id):
-                return resolve(id);
+                // identifiers
+            case EIdent( id ):
+                return resolve( id );
 
-            // variable declaration
-            case EVar(n,_,e):
+                // variable declaration
+            case EVar(n, _, e):
                 declared.push({
                     n: n,
                     old: locals.get(n) 
@@ -360,31 +382,31 @@ class Interp {
                 });
                 return null;
 
-            // parenthesized expression
-            case EParent(e):
-                return expr(e);
+                // parenthesized expression
+            case EParent( e ):
+                return expr( e );
 
-            // block expression
-            case EBlock(exprs):
+                // block expression
+            case EBlock( exprs ):
                 var old = declared.length;
                 var v = null;
-                for( e in exprs )
+                for (e in exprs)
                     v = expr(e);
                 restore(old);
                 return v;
 
-            // dot-field access
+                // dot-field access
             case EField(e, f):
                 return get(expr(e),f);
 
-            // binary operators
+                // binary operators
             case EBinop(op, e1, e2):
                 var fop = binops.get(op);
                 if (fop == null) 
                     error(EInvalidOp(op));
                 return fop(e1,e2);
 
-            // unary operators
+                // unary operators
             case EUnop(op,prefix,e):
                 switch(op) {
                     case "!":
@@ -401,11 +423,13 @@ class Interp {
                         #else
                         return ~expr(e);
                         #end
+
                     default:
-                        error(EInvalidOp(op));
+                        error(EInvalidOp( op ));
+                        return null;
                 }
 
-            // function invokation
+                // function invokation
             case ECall(e,params):
                 var args = new Array();
                 for( p in params )
@@ -420,38 +444,39 @@ class Interp {
                         return call(null,expr(e),args);
                 }
 
-            // if statement
+                // if statement
             case EIf(econd, e1, e2):
                 return if(expr(econd) == true) expr(e1) else if (e2 == null) null else expr(e2);
 
-            // while loop
+                // while loop
             case EWhile(econd, e):
                 whileLoop(econd, e);
                 return null;
 
-            // do while loop
+                // do while loop
             case EDoWhile(econd, e):
                 doWhileLoop(econd, e);
                 return null;
 
-            // for loop
+                // for loop
             case EFor(v,it,e):
                 forLoop(v,it,e);
                 return null;
 
-            // break statement
+                // break statement
             case EBreak:
                 throw SBreak;
 
-            // continue statement
+                // continue statement
             case EContinue:
                 throw SContinue;
 
-            // return statement
-            case EReturn(e):
-                throw SReturn((e == null)?null:expr(e));
+                // return statement
+            case EReturn( e ):
+                returnValue = ((e == null) ? null : expr( e ));
+                throw SReturn;
 
-            // function definition
+                // function definition
             case EFunction(params, fexpr, name, _):
                 var capturedLocals = duplicate(locals);
                 var me = this;
@@ -489,40 +514,47 @@ class Interp {
                     for( i in 0...params.length )
                         me.locals.set(params[i].name,{ r : args[i] });
                     var r = null;
-                    if( inTry )
+                    if ( inTry ) {
                         try {
                             r = me.exprReturn(fexpr);
-                        } catch( e : Dynamic ) {
+                        } 
+                        catch(e : Dynamic) {
                             me.locals = old;
                             me.depth = depth;
-                            #if neko
+#if neko
                             neko.Lib.rethrow(e);
-                            #else
+#else
                             throw e;
-                            #end
+#end
                         }
-                    else
+                    }
+                    else {
                         r = me.exprReturn(fexpr);
+                    }
                     me.locals = old;
                     me.depth = depth;
                     return r;
                 };
-                var f = Reflect.makeVarArgs(f);
-                if( name != null ) {
-                    if( depth == 0 ) {
+                var f = Reflect.makeVarArgs( f );
+                if (name != null) {
+                    if (depth == 0) {
                         // global function
                         variables.set(name, f);
-                    } else {
+                    } 
+                    else {
                         // function-in-function is a local function
-                        declared.push( { n : name, old : locals.get(name) } );
-                        var ref = { r : f };
+                        declared.push({
+                            n: name,
+                            old: locals.get(name) 
+                        });
+                        var ref = {r: f};
                         locals.set(name, ref);
                         capturedLocals.set(name, ref); // allow self-recursion
                     }
                 }
                 return f;
 
-            // array/map declaration
+                // array/map declaration
             case EArrayDecl(arr):
                 if (arr.length > 0 && edef(arr[0]).match(EBinop("=>", _))) {
                     var isAllString:Bool = true;
@@ -532,7 +564,7 @@ class Interp {
                     var keys:Array<Dynamic> = [];
                     var values:Array<Dynamic> = [];
                     for (e in arr) {
-                        switch(edef(e)) {
+                        switch(edef( e )) {
                             case EBinop("=>", eKey, eValue): {
                                 var key:Dynamic = expr(eKey);
                                 var value:Dynamic = expr(eValue);
@@ -560,13 +592,13 @@ class Interp {
                 }
                 else {
                     var a = new Array();
-                    for ( e in arr ) {
-                        a.push(expr(e));
+                    for (e in arr) {
+                        a.push(expr( e ));
                     }
                     return a;
                 }
 
-            // array access
+                // array access
             case EArray(e, index):
                 var arr:Dynamic = expr(e);
                 var index:Dynamic = expr(index);
@@ -577,54 +609,64 @@ class Interp {
                     return arr[index];
                 }
 
-            // new object creation
-            case ENew(cl,params):
+                // new object creation
+            case ENew(cl, params):
                 var a = new Array();
                 for( e in params )
                     a.push(expr(e));
                 return cnew(cl,a);
 
-            // throw statement
-            case EThrow(e):
-                throw expr(e);
+                // throw statement
+            case EThrow( e ):
+                throw expr( e );
 
-            // try...catch statement
-            case ETry(e,n,_,ecatch):
+                // try...catch statement
+            case ETry(e, n, _, ecatch):
                 var old = declared.length;
                 var oldTry = inTry;
                 try {
                     inTry = true;
-                    var v : Dynamic = expr(e);
-                    restore(old);
+                    var v:Dynamic = expr( e );
+                    restore( old );
                     inTry = oldTry;
                     return v;
-                } catch( err : Stop ) {
+                }
+                catch(err : Stop) {
                     inTry = oldTry;
                     throw err;
-                } catch( err : Dynamic ) {
+                }
+                catch(err : Dynamic) {
                     // restore vars
-                    restore(old);
+                    restore( old );
                     inTry = oldTry;
                     // declare 'v'
-                    declared.push({ n : n, old : locals.get(n) });
-                    locals.set(n,{ r : err });
-                    var v : Dynamic = expr(ecatch);
-                    restore(old);
+                    declared.push({ 
+                        n: n,
+                        old: locals.get(n) 
+                    });
+                    locals.set(n, {r: err});
+                    var v:Dynamic = expr( ecatch );
+                    restore( old );
                     return v;
                 }
 
-            // object declaration
-            case EObject(fl):
+                // object declaration
+            case EObject( fl ):
                 var o = {};
                 for( f in fl )
-                    set(o,f.name,expr(f.e));
+                    set(o, f.name, expr( f.e ));
                 return o;
 
-            // ternary statement
-            case ETernary(econd,e1,e2):
-                return if( expr(econd) == true ) expr(e1) else expr(e2);
+                // ternary statement
+            case ETernary(econd, e1, e2):
+                return {
+                    if (expr( econd ) == true) 
+                        expr( e1 );
+                    else
+                        expr( e2 );
+                };
 
-            // switch statement
+                // switch statement
             case ESwitch(e, cases, def):
                 var val : Dynamic = expr(e);
                 var match = false;
@@ -642,11 +684,16 @@ class Interp {
                 if( !match )
                     val = def == null ? null : expr(def);
                 return val;
-		case EMeta(_, _, e):
-			return expr(e);
-		}
-		return null;
-	}
+
+            // metadata statement
+            case EMeta(_, _, e):
+                return expr(e);
+
+            // any other expression
+            default:
+                return null;
+        }
+    }
 
     /**
       * perform a do...while loop
@@ -655,17 +702,18 @@ class Interp {
 		var old = declared.length;
 		do {
 			try {
-				expr(e);
-			} catch( err : Stop ) {
+				expr( e );
+			} 
+			catch (err : Stop) {
 				switch(err) {
 				case SContinue:
 				case SBreak: break;
-				case SReturn(_): throw err;
+				case SReturn: throw err;
 				}
 			}
 		}
-		while( expr(econd) == true );
-		restore(old);
+		while (expr(econd) == true);
+		restore( old );
 	}
 
     /**
@@ -680,7 +728,7 @@ class Interp {
 				switch(err) {
 				case SContinue:
 				case SBreak: break;
-				case SReturn(_): throw err;
+				case SReturn: throw err;
 				}
 			}
 		}
@@ -718,7 +766,7 @@ class Interp {
 				switch( err ) {
 				case SContinue:
 				case SBreak: break;
-				case SReturn(_): throw err;
+				case SReturn: throw err;
 				}
 			}
 		}
@@ -802,12 +850,13 @@ class Interp {
 
 	//public var variables : Map<String,Dynamic>;
 	public var variables : Scope;
-	private var locals : Map<String,{ r : Dynamic }>;
-	var binops : Map<String, Expr -> Expr -> Dynamic >;
+	private var locals : Map<String, {r: Dynamic}>;
+	private var binops : Map<String, Expr -> Expr -> Dynamic >;
 
-	var depth : Int;
-	var inTry : Bool;
-	var declared : Array<{ n : String, old : { r : Dynamic } }>;
+	private var depth: Int;
+	private var inTry: Bool;
+	private var returnValue:Null<Dynamic> = null;
+	private var declared: Array<{n: String, old: {r: Dynamic}}>;
 
 	#if hscriptPos
 	var curExpr : Expr;
@@ -817,5 +866,13 @@ class Interp {
 private enum Stop {
 	SBreak;
 	SContinue;
+	SReturn;
+}
+
+/*
+private enum Stop {
+	SBreak;
+	SContinue;
 	SReturn( v : Dynamic );
 }
+*/

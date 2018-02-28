@@ -77,7 +77,7 @@ class Macro {
 			case OpArrow: "=>";
 			#end
 			#if (haxe_ver >= 4)
-			case OpIn: "...";
+			case OpIn: "in";
 			#end
 			};
 			binops.set(str, op);
@@ -238,6 +238,7 @@ class Macro {
 			case EMeta(m, params, esub):
 				var mpos = #if hscriptPos { file : p.file, min : e.pmin, max : e.pmax } #else p #end;
 				EMeta({ name : m, params : params == null ? [] : [for( p in params ) convert(p)], pos : mpos }, convert(esub));
+			default:null;
 		}, pos : #if hscriptPos { file : p.file, min : e.pmin, max : e.pmax } #else p #end }
 	}
 
