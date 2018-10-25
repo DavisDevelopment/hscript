@@ -40,6 +40,7 @@ typedef Expr = {
 }
 enum ExprDef {
 #else
+typedef ExprDef = Expr;
 enum Expr {
 #end
 	EConst( c : Const );
@@ -68,6 +69,7 @@ enum Expr {
 	ESwitch( e : Expr, cases : Array<{ values : Array<Expr>, expr : Expr }>, ?defaultExpr : Expr);
 	EDoWhile( cond : Expr, e : Expr);
 	EMeta( name : String, args : Array<Expr>, e : Expr );
+	ECheckType( e : Expr, t : CType );
 
 	EClass(name:String, e:Expr, ?baseClass:String);
 	EPackage(path: String);
@@ -88,6 +90,8 @@ enum CType {
 	CTFun( args : Array<CType>, ret : CType );
 	CTAnon( fields : Array<{ name : String, t : CType, ?meta : Metadata }> );
 	CTParent( t : CType );
+	CTOpt( t : CType );
+	CTNamed( n : String, t : CType );
 }
 
 /*

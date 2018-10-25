@@ -25,7 +25,7 @@ import hscript.Expr;
 class Tools {
 
 	public static function iter( e : Expr, f : Expr -> Void ) {
-		switch( #if hscriptPos e.e #else e #end ) {
+		switch( expr(e) ) {
 		case EConst(_), EIdent(_):
 		case EVar(_, _, e): if( e != null ) f(e);
 		case EParent(e): f(e);
@@ -56,16 +56,13 @@ class Tools {
 			}
 			if( def != null ) f(def);
 		case EMeta(name, args, e): if( args != null ) for( a in args ) f(a); f(e);
+		case ECheckType(e,_): f(e);
 		}
 	}
 
 	public static function map( e : Expr, f : Expr -> Expr ) {
-		#if hscriptPos
-		var edef = switch( e.e ) {
-		#else
-		return switch( e ) {
-		#end
-		case EConst(_), EIdent(_), EBreak, EContinue: #if hscriptPos e.e #else e #end;
+		var edef = switch( expr(e) ) {
+		case EConst(_), EIdent(_), EBreak, EContinue: expr(e);
 		case EVar(n, t, e): EVar(n, t, if( e != null ) f(e) else null);
 		case EParent(e): EParent(f(e));
 		case EBlock(el): EBlock([for( e in el ) f(e)]);
@@ -88,9 +85,24 @@ class Tools {
 		case ETernary(c, e1, e2): ETernary(f(c), f(e1), f(e2));
 		case ESwitch(e, cases, def): ESwitch(f(e), [for( c in cases ) { values : [for( v in c.values ) f(v)], expr : f(c.expr) } ], def == null ? null : f(def));
 		case EMeta(name, args, e): EMeta(name, args == null ? null : [for( a in args ) f(a)], f(e));
+		case ECheckType(e,t): ECheckType(f(e), t);
 		}
+		return mk(edef, e);
+	}
+
+	public static inline function expr( e : Expr ) : ExprDef {
 		#if hscriptPos
-		return { e : edef, pmin : e.pmin, pmax : e.pmax, origin : e.origin, line : e.line };
+		return e.e;
+		#else
+		return e;
+		#end
+	}
+
+	public static inline function mk( e : ExprDef, p : Expr ) {
+		#if hscriptPos
+		return { e : e, pmin : p.pmin, pmax : p.pmax, origin : p.origin, line : p.line };
+		#else
+		return e;
 		#end
 	}
 

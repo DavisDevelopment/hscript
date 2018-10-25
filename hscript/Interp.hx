@@ -161,7 +161,7 @@ class Interp {
       */
 	private function evalAssignOp(op,fop,e1,e2) : Dynamic {
 		var v;
-		switch( edef(e1) ) {
+		switch( Tools.expr(e1) ) {
 		case EIdent(id):
 			var l = locals.get(id);
 			v = fop(expr(e1),expr(e2));
